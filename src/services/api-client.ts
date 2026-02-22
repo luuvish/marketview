@@ -58,7 +58,17 @@ export async function apiFetch<T>(options: FetchOptions): Promise<T> {
     try {
       const res = await fetch(url.toString(), { signal: controller.signal });
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        let detail = '';
+        try {
+          const text = (await res.text()).trim();
+          if (text) {
+            const compact = text.replace(/\s+/g, ' ').slice(0, 200);
+            detail = ` - ${compact}`;
+          }
+        } catch {
+          // Ignore body parse failures for non-OK responses.
+        }
+        throw new Error(`HTTP ${res.status}: ${res.statusText}${detail}`);
       }
       const data = (await res.json()) as T;
       cache.set(cacheKey, data, ttl);

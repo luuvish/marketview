@@ -18,7 +18,7 @@ export interface Quote {
 export type AssetCategory = 'stock' | 'crypto' | 'forex' | 'metal' | 'korean';
 
 export interface CandleData {
-  time: string;
+  time: Time;
   open: number;
   high: number;
   low: number;
