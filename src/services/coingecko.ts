@@ -1,6 +1,7 @@
 import { apiFetch } from './api-client';
 import { Quote, LineData } from '@/types/market';
 import { CRYPTO_ASSETS } from '@/config/assets';
+import type { UTCTimestamp } from 'lightweight-charts';
 
 interface CoinGeckoPrice {
   [id: string]: {
@@ -84,8 +85,22 @@ export async function fetchCryptoChart(
     cacheTTL: 5 * 60_000,
   });
 
-  return data.prices.map(([timestamp, value]) => ({
-    time: new Date(timestamp).toISOString().split('T')[0],
-    value,
-  }));
+  const sorted = data.prices
+    .map(([timestamp, value]) => ({
+      time: Math.floor(timestamp / 1000) as UTCTimestamp,
+      value,
+    }))
+    .sort((a, b) => Number(a.time) - Number(b.time));
+
+  // lightweight-charts expects strictly increasing time values.
+  const deduped: LineData[] = [];
+  let lastTime: number | null = null;
+  for (const point of sorted) {
+    const currentTime = Number(point.time);
+    if (lastTime === currentTime) continue;
+    deduped.push(point);
+    lastTime = currentTime;
+  }
+
+  return deduped;
 }

@@ -17,10 +17,11 @@ interface FetchOptions {
   endpoint: string;
   params?: Record<string, string>;
   cacheTTL?: number;
+  timeoutMs?: number;
 }
 
 export async function apiFetch<T>(options: FetchOptions): Promise<T> {
-  const { provider, endpoint, params, cacheTTL } = options;
+  const { provider, endpoint, params, cacheTTL, timeoutMs } = options;
   const config = API_CONFIG[provider];
   const ttl = cacheTTL ?? config.cacheTTL;
 
@@ -49,8 +50,13 @@ export async function apiFetch<T>(options: FetchOptions): Promise<T> {
   // Fetch with retry
   let lastError: Error | null = null;
   for (let attempt = 0; attempt < 3; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = timeoutMs
+      ? setTimeout(() => controller.abort(), timeoutMs)
+      : null;
+
     try {
-      const res = await fetch(url.toString());
+      const res = await fetch(url.toString(), { signal: controller.signal });
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       }
@@ -58,10 +64,16 @@ export async function apiFetch<T>(options: FetchOptions): Promise<T> {
       cache.set(cacheKey, data, ttl);
       return data;
     } catch (err) {
-      lastError = err as Error;
+      const error = err as Error;
+      lastError =
+        error.name === 'AbortError' && timeoutMs
+          ? new Error(`Request timed out after ${timeoutMs}ms`)
+          : error;
       if (attempt < 2) {
         await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
       }
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
     }
   }
 

@@ -43,8 +43,12 @@ export function SparklineChart({
         crosshairMarkerVisible: false,
       });
 
-      series.setData(data.map((d) => ({ time: d.time, value: d.value })));
-      chart.timeScale().fitContent();
+      try {
+        series.setData(data.map((d) => ({ time: d.time, value: d.value })));
+        chart.timeScale().fitContent();
+      } catch (error) {
+        console.error('Failed to render sparkline chart data', error);
+      }
     },
     [data, color]
   );

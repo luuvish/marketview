@@ -1,3 +1,5 @@
+import type { Time } from 'lightweight-charts';
+
 export interface Quote {
   symbol: string;
   name: string;
@@ -25,7 +27,7 @@ export interface CandleData {
 }
 
 export interface LineData {
-  time: string;
+  time: Time;
   value: number;
 }
 

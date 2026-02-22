@@ -37,6 +37,10 @@ Open [http://localhost:5173/marketview/](http://localhost:5173/marketview/)
 Settings 페이지(`#/settings`)에서 API key를 입력하면 `localStorage`에 저장됩니다.
 키는 해당 API 서버에만 전송되며 다른 곳으로 전송되지 않습니다.
 
+계정 생성/키 발급이 처음이면 아래 가이드를 참고하세요:
+
+- [API 계정 생성 및 API Key 발급 가이드](API_KEY_SETUP.md)
+
 빌드 시 환경변수로 기본값을 주입할 수도 있습니다:
 
 ```bash
